@@ -4,24 +4,36 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out from GitHub...'
+                // SCM 설정(Pipeline script from SCM)을 했다면 자동으로 가져오지만, 
+                // 명시적으로 적어주는 것이 좋습니다.
+                checkout scm
             }
         }
-        stage('Build') {
+        stage('Prepare') {
             steps {
-                echo 'Building Project...'
-                // 예: sh 'pip install -r requirements.txt'
+                echo 'Installing dependencies...'
+                sh '''
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install --upgrade pip
+                # requirements.txt가 있으면 설치, 없으면 pytest 직접 설치
+                if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest; fi
+                '''
             }
         }
         stage('Test') {
             steps {
-                echo 'Running Tests...'
-                // 예: sh 'pytest' (테스트 성공/실패 여부 확인)
+                echo 'Running Pytest...'
+                sh '''
+                . venv/bin/activate
+                pytest
+                '''
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying to Server...'
+                echo 'Deploying...'
+                // 여기에 배포 스크립트 작성
             }
         }
     }
